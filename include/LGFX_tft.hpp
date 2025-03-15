@@ -88,10 +88,10 @@ public:
       cfg.use_lock = false;              // 如果使用事务锁，设置为真
       cfg.dma_channel = 1; // 使用するDMAチャンネルを設定 (0=DMA不使用 / 1=1ch / 2=ch / SPI_DMA_CH_AUTO=自動設定)
       // ※ ESP-IDFバージョンアップに伴い、DMAチャンネルはSPI_DMA_CH_AUTO(自動設定)が推奨になりました。1ch,2chの指定は非推奨になります。
-      cfg.pin_sclk = 1; // SPIのSCLKピン番号を設定
-      cfg.pin_mosi = 41; // SPIのMOSIピン番号を設定
+      cfg.pin_sclk = 13; // SPIのSCLKピン番号を設定
+      cfg.pin_mosi = 15; // SPIのMOSIピン番号を設定
       cfg.pin_miso = -1; // SPIのMISOピン番号を設定 (-1 = disable)
-      cfg.pin_dc = 21;   // SPIのD/Cピン番号を設定  (-1 = disable)
+      cfg.pin_dc = 14;   // SPIのD/Cピン番号を設定  (-1 = disable)
                          // SDカードと共通のSPIバスを使う場合、MISOは省略せず必ず設定してください。
 #endif
 
@@ -102,7 +102,7 @@ public:
     {                                      // 表示パネル制御の設定を行います。
       auto cfg = _panel_instance.config(); // 表示パネル設定用の構造体を取得します。
 
-      cfg.pin_cs = 4;    // CSが接続されているピン番号   (-1 = disable)
+      cfg.pin_cs = 12;    // CSが接続されているピン番号   (-1 = disable)
       cfg.pin_rst = 11;  // RSTが接続されているピン番号  (-1 = disable)
       cfg.pin_busy = -1; // BUSYが接続されているピン番号 (-1 = disable)
 
@@ -112,7 +112,7 @@ public:
       cfg.panel_height = 320;   // 实际可显示的高度
       cfg.offset_x = 0;         // 面板的X方向偏移量
       cfg.offset_y = 0;         // 面板的Y方向偏移量
-      cfg.offset_rotation = 2;  // 旋转方向的值偏移0-7(4-7为上下反转
+      cfg.offset_rotation = 0;  // 旋转方向的值偏移0-7(4-7为上下反转
       cfg.dummy_read_pixel = 8; // 读取像素数据之前需要进行的无效读取操作的像素数量,消除可能存在的前置数据或杂讯
       cfg.dummy_read_bits = 1;  // 在读取数据时需要额外读取的无效位数量,对齐数据流，或者消除噪声或错误数据
       cfg.readable = false;     // 如果可以读取数据，设置为真1/
@@ -132,7 +132,7 @@ public:
     {                                      // バックライト制御の設定を行います。（必要なければ削除）
       auto cfg = _light_instance.config(); // バックライト設定用の構造体を取得します。
 
-      cfg.pin_bl = 39;     // バックライトが接続されているピン番号
+      cfg.pin_bl = 21;     // バックライトが接続されているピン番号
       cfg.invert = false;  // バックライトの輝度を反転させる場合 true
       cfg.freq = 44100;    // バックライトのPWM周波数
       cfg.pwm_channel = 7; // 使用するPWMのチャンネル番号

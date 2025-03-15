@@ -109,7 +109,8 @@ void lv_port_disp_init(void)
 
     // Try to get buffer from PSRAM
     size_t buffer_size = MY_DISP_HOR_RES * MY_DISP_VER_RES * sizeof(lv_color_t);
-    // buffer_size = (MY_DISP_HOR_RES * MY_DISP_VER_RES) / 2;
+// buffer_size = (MY_DISP_HOR_RES * MY_DISP_VER_RES) / 2;
+#if USE_PSRAM
     Serial.println("Try to get buffer from PSRAM");
     static lv_color_t *buf_3_1 = (lv_color_t *)ps_malloc(MY_DISP_HOR_RES * MY_DISP_VER_RES * 1 * sizeof(lv_color_t));
     static lv_color_t *buf_3_2 = (lv_color_t *)ps_malloc(MY_DISP_HOR_RES * MY_DISP_VER_RES * 1 * sizeof(lv_color_t));
@@ -123,9 +124,23 @@ void lv_port_disp_init(void)
     else
     {
         Serial.printf("[LVGL] malloc buffer from PSRAM successful\r\n");
-        Serial.printf("[LVGL] free PSRAM: %d\r\n", ESP.getFreePsram() / 1024);
+        Serial.printf("[LVGL] free PSRAM: %dkb\r\n", ESP.getFreePsram() / 1024);
     }
-
+#else
+    Serial.println("Try to get buffer from normal memory");
+    static lv_color_t *buf_3_1 = (lv_color_t *)malloc(MY_DISP_HOR_RES * MY_DISP_VER_RES * 1 * sizeof(lv_color_t));
+    static lv_color_t *buf_3_2 = (lv_color_t *)malloc(MY_DISP_HOR_RES * MY_DISP_VER_RES * 1 * sizeof(lv_color_t));
+    if ((buf_3_1 == NULL) || (buf_3_2 == NULL))
+    { // If something wrong
+        Serial.printf("[LVGL] malloc buffer from normal memory error\r\n");
+        while (1)
+            delay(1000);
+    }
+    else
+    {
+        Serial.printf("[LVGL] malloc buffer from normal memory successful\r\n");
+    }
+#endif
     lv_disp_draw_buf_init(&draw_buf_dsc_3, buf_3_1, buf_3_2,
                           buffer_size * 2); // Initialize the display buffer
 
@@ -236,12 +251,14 @@ static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_
         if (tft.getStartCount() == 0)
         {
             tft.startWrite();
-        
-        tft.setAddrWindow(area->x1, area->y1, w, h);
-        tft.pushPixels((uint16_t *)&color_p->full, w * h, true);
-        //tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::swap565_t *)&color_p->full);
-        //tft.waitDMA();
-        tft.endWrite();}
+
+            tft.setAddrWindow(area->x1, area->y1, w, h);
+            //tft.pushPixels((uint16_t *)&color_p->full, w * h, true);
+            tft.pushPixelsDMA((uint16_t *)&color_p->full, w * h, true);
+            // tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::swap565_t *)&color_p->full);
+            // tft.waitDMA();
+            tft.endWrite();
+        }
 
 #endif
 

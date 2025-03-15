@@ -11,7 +11,7 @@ int memory_taskMemory = 3 * 1024;
 int audio_taskMemory = 8 * 1024;
 int lrc_taskMemory = 4 * 1024;
 int LGFX_taskMemory = 2 * 1024;
-int BLEDevice_connect_taskMemory = 4 * 1024;
+int BLEDevice_connect_taskMemory = 5 * 1024;
 int time_task_size = 8 * 1024; // 经测试，稳定运行至少需要8kb
 
 int waterMark;

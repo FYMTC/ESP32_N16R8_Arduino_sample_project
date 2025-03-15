@@ -17,7 +17,12 @@
 #include "tasks/lrc_task/lrc_task.h"
 #include "tasks/LGFX_task/LGFX_task.h"
 #include "tasks/BLE_mouse_task/BLE_TASK.h"
-
+#include "tasks/i2c_task/i2c_task.h"
+#include "tasks/sd_task/sd_task.h"
+#include "tasks/pca9554_task/pca9554.h"
+#include "tasks/rtc_task/rtc_task.h"
+#include "tasks/QMC5883_task/QMC5883_task.h"
+#include "tasks/power_task/axp2101_task.h"
 #include <wifi.h>
 #include <HTTPClient.h>
 
@@ -29,6 +34,7 @@ extern TaskHandle_t mic_task_HANDLE;
 extern TaskHandle_t lrc_task_HANDLE;
 extern TaskHandle_t LGFX_task_HANDLE;
 extern TaskHandle_t BLEDevice_connect_HANDLE;
+extern TaskHandle_t i2c_task_HANDLE;
 
 extern int mic_taskMemory;
 extern int audio_taskMemory;

@@ -1,14 +1,11 @@
 #include "tasks/BLE_mouse_task/BLE_TASK.h"
 
-#define FILENAME "/mouse_device.txt"
 static BLEUUID serviceUUID("00001812-0000-1000-8000-00805f9b34fb"); // HID Service UUID
 static BLEUUID charUUID("00002a4d-0000-1000-8000-00805f9b34fb");    // Report Characteristic UUID
-extern SemaphoreHandle_t sdCardMutex;
 BLEAdvertisedDevice *myDevice = nullptr;
 BLEClient *pClient0 = nullptr;
 bool doConnect = false;
 bool isConnected = false;
-std::string savedAddressStr = "";
 void startScan(void *parameter);
 bool connectTaskFinished = false;
 ///////// LVGL //////////////
@@ -70,14 +67,7 @@ class MyAdvertisedDeviceCallbacks0 : public NimBLEAdvertisedDeviceCallbacks
 
         if (advertisedDevice->haveServiceUUID() && advertisedDevice->isAdvertisingService(serviceUUID))
         {
-            if (advertisedDevice->getAddress().toString() == savedAddressStr)
-            {
-                //Serial.println("Found device with saved address.");
-                BLEDevice::getScan()->stop();
-                myDevice = new NimBLEAdvertisedDevice(*advertisedDevice);
-                doConnect = true;
-            }
-            else if (!myDevice)
+            if (!myDevice)
             {
                 // 如果还没有设备准备连接，则保存该设备
                 myDevice = new NimBLEAdvertisedDevice(*advertisedDevice);
@@ -85,42 +75,6 @@ class MyAdvertisedDeviceCallbacks0 : public NimBLEAdvertisedDeviceCallbacks
         }
     }
 };
-
-void saveDeviceAddress(BLEAddress address)
-{
-    if (xSemaphoreTake(sdCardMutex, portMAX_DELAY) == pdTRUE) {
-    File file = SD.open(FILENAME, FILE_WRITE);
-    if (!file)
-    {
-        //Serial.println("Failed to open file for writing");
-        return;
-    }
-    file.println(address.toString().c_str());
-    file.close();
-    xSemaphoreGive(sdCardMutex); // Release the mutex
-    }
-    //Serial.println("Device address saved to SD card");
-}
-
-std::string readDeviceAddress()
-{
-    if (xSemaphoreTake(sdCardMutex, portMAX_DELAY) == pdTRUE) {
-    File file = SD.open(FILENAME, FILE_READ);
-    if (!file)
-    {
-        //Serial.println("Failed to open file for reading");
-        return "";
-    }
-
-    String addressStr = file.readStringUntil('\n');
-    file.close();
-    //Serial.print("Device address read from SD card: ");
-    //Serial.println(addressStr);
-    xSemaphoreGive(sdCardMutex); // Release the mutex
-    
-
-    return addressStr.c_str();}
-}
 
 void connectToServer(void *parameter)
 {
@@ -133,48 +87,6 @@ void connectToServer(void *parameter)
             {
                 pClient0 = BLEDevice::createClient();
                 pClient0->setClientCallbacks(new MyClientCallback0());
-            }
-
-            if (savedAddressStr != "")
-            {
-                BLEAddress savedAddress(savedAddressStr);
-                if (pClient0->connect(savedAddress))
-                {
-                    //Serial.println("Connected to server.");
-
-                    // Obtain a reference to the HID service
-                    BLERemoteService *pRemoteService = pClient0->getService(serviceUUID);
-                    if (pRemoteService == nullptr)
-                    {
-                        //Serial.println("Failed to find our service UUID.");
-                        pClient0->disconnect();
-                    }
-                    else
-                    {
-                        // Obtain a reference to the Report characteristic
-                        BLERemoteCharacteristic *pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
-                        if (pRemoteCharacteristic == nullptr)
-                        {
-                            //Serial.println("Failed to find our characteristic UUID.");
-                            pClient0->disconnect();
-                        }
-                        else
-                        {
-                            if (pRemoteCharacteristic->canNotify())
-                            {
-                                pRemoteCharacteristic->subscribe(true, notifyCallback0, false);
-                                //Serial.println("Connected to server from savedAddressStr.");
-                            }
-                            saveDeviceAddress(savedAddress);
-                            savedAddressStr = "";
-                            isConnected = true;
-                        }
-                    }
-                }
-                else
-                {
-                    //Serial.println("Failed to connect with savedAddress.");
-                }
             }
 
             if (!isConnected)
@@ -207,7 +119,6 @@ void connectToServer(void *parameter)
                                 pRemoteCharacteristic->subscribe(true, notifyCallback0, false);
                                 //Serial.println("Connected to server from discovered device.");
                             }
-                            saveDeviceAddress(myDevice->getAddress());
                             isConnected = true;
                         }
                     }
@@ -270,17 +181,7 @@ void BLEDevice_connect(void *parameter)
     }
 
     BLEDevice::init("");
-    savedAddressStr = readDeviceAddress();
-    if (savedAddressStr != "")
-    {
-        doConnect = true;
-    }
-    else
-    {
-        xTaskCreate(startScan, "startScan", 4096, NULL, 1, &scanTaskHandle);
-        //Serial.println("[BLEDevice_connect TASK] BLE scan Task Created");
-    }
-
+    xTaskCreate(startScan, "startScan", 4096, NULL, 1, &scanTaskHandle);
     xTaskCreate(connectToServer, "connectToServer", 8192, NULL, 1, &connectTaskHandle);
     ////////// LOOP //////////////
     for (;;)

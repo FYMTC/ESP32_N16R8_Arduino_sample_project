@@ -11,7 +11,7 @@
 
 #define USE_LGFX 1
 #define USE_eTFT 0
-
+#define USE_PSRAM 0
 /*********************
  *      INCLUDES
  *********************/

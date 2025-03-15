@@ -64,7 +64,7 @@ void LGFX_task(void *pvParam)
   // lv_obj_set_style_radius(song_cover,64,0);
   //lv_disp_load_scr(page_LGFX);
   
-  Serial.println("[LGFX task] lvgl lv_demo_stress begin");
+  Serial.println("[LGFX task] lvgl lv_demo begin");
   lv_demo_benchmark();
   // lv_demo_stress();
 
